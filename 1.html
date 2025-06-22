@@ -5,51 +5,84 @@
   <title>Tractor Sliding Puzzle Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     body {
-      background: #222;
-      color: #fff;
+      background: #f8f8fa;
+      color: #222;
       font-family: 'Segoe UI', Arial, sans-serif;
-      margin: 0; padding: 0;
-      display: flex; flex-direction: column; align-items: center;
       min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: stretch;
+      box-sizing: border-box;
+      overscroll-behavior: contain;
     }
     #game-container {
-      margin: 30px auto 10px auto;
-      background: #333;
-      border-radius: 16px;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
-      padding: 18px 12px 24px 12px;
-      max-width: 98vw;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
       user-select: none;
       touch-action: none;
     }
     #header {
+      width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       gap: 12px;
+      padding: 24px 24px 0 24px;
+      box-sizing: border-box;
+      background: #fff;
+      z-index: 2;
     }
     #level-select {
-      font-size: 16px;
+      font-size: 18px;
       border-radius: 4px;
       border: none;
-      padding: 2px 10px;
+      padding: 5px 14px;
       margin-left: 8px;
-      background: #555;
-      color: #fff;
+      background: #e5e5ef;
+      color: #222;
+      font-weight: 500;
+      outline: none;
+      box-shadow: 0 2px 6px #0001;
     }
     #puzzle-grid {
-      width: 320px;
-      height: 320px;
-      background: #111;
+      flex: 1;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(4, 1fr);
-      gap: 2px;
-      border-radius: 10px;
-      margin-bottom: 15px;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 4vw;
+      border-radius: 3vw;
+      width: 92vw;
+      height: 92vw;
+      max-width: 92vh;
+      max-height: 92vh;
+      background: #eaeaf5;
+      margin: 1.5vw auto 0 auto;
       touch-action: none;
+      box-sizing: border-box;
+      position: relative;
     }
     .tile {
       background: #eee;
@@ -59,89 +92,96 @@
       align-items: center;
       justify-content: center;
       font-size: 0;
-      border-radius: 5px;
+      border-radius: 2vw;
       transition: transform 0.16s cubic-bezier(.5,1.4,.8,1);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.11);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.09);
       overflow: hidden;
       cursor: pointer;
       touch-action: none;
+      background-size: 200% 200%;
+      background-repeat: no-repeat;
+      background-color: #fff;
+      min-width: 0;
+      min-height: 0;
+      aspect-ratio: 1 / 1;
     }
-    .tile img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-      border-radius: 5px;
-      user-drag: none;
-      user-select: none;
-    }
-    .tile.empty {
-      background: #111;
-      cursor: default;
-      transition: background 0.2s;
+    .tile.solved {
+      outline: 2px solid #8bc34a;
     }
     #controls {
+      width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-top: 7px;
+      margin: 0;
+      padding: 12px 24px 18px 24px;
+      box-sizing: border-box;
+      background: #fff;
+      z-index: 2;
     }
     #stats {
-      font-size: 16px;
+      font-size: 19px;
+      font-weight: 500;
     }
     #preview-btn, #reset-btn {
-      background: #888;
-      color: #fff;
+      background: #e5e5ef;
+      color: #222;
       border: none;
       border-radius: 5px;
-      padding: 6px 12px;
-      font-size: 15px;
+      padding: 8px 18px;
+      font-size: 17px;
       margin: 0 2px;
       cursor: pointer;
       transition: background 0.15s;
+      font-weight: 500;
+      box-shadow: 0 1px 2px #0001;
     }
     #preview-btn:hover, #reset-btn:hover {
-      background: #aaa;
+      background: #d4d4ed;
     }
     #preview-modal {
       position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      background: #111;
-      border-radius: 16px;
-      padding: 22px 18px 18px 18px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 26px 20px 22px 20px;
       z-index: 9999;
-      box-shadow: 0 8px 48px #000b;
+      box-shadow: 0 8px 48px #0002;
       display: none;
       flex-direction: column;
       align-items: center;
     }
     #preview-modal img {
-      width: 256px; height: 256px;
-      border-radius: 12px;
+      width: 60vw; height: 60vw;
+      max-width: 360px; max-height: 360px;
+      border-radius: 14px;
       margin-bottom: 10px;
+      background: #f8f8fa;
     }
     #close-preview {
-      background: #888;
-      color: #fff;
+      background: #e5e5ef;
+      color: #222;
       border: none;
-      border-radius: 5px;
-      padding: 6px 12px;
-      font-size: 15px;
+      border-radius: 7px;
+      padding: 8px 18px;
+      font-size: 17px;
       cursor: pointer;
       margin-top: 4px;
+      font-weight: 500;
+      box-shadow: 0 1px 2px #0001;
     }
     #win-modal {
       position: fixed;
       z-index: 9999;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      background: #1a3;
-      color: #fff;
-      border-radius: 16px;
-      padding: 32px 18px 20px 18px;
-      box-shadow: 0 8px 48px #000b;
+      background: #f0ffe4;
+      color: #248d34;
+      border-radius: 24px;
+      padding: 38px 20px 24px 20px;
+      box-shadow: 0 8px 48px #0002;
       display: none;
       flex-direction: column;
       align-items: center;
@@ -151,22 +191,57 @@
       background: #fff;
       color: #176c1f;
       border: none;
-      border-radius: 5px;
-      padding: 8px 18px;
-      font-size: 18px;
+      border-radius: 9px;
+      padding: 10px 24px;
+      font-size: 21px;
       cursor: pointer;
-      margin: 8px 7px 0 7px;
+      margin: 10px 9px 0 9px;
       font-weight: bold;
+      box-shadow: 0 1px 2px #0001;
     }
     #footer {
-      margin-top: 18px;
-      color: #888;
+      margin-top: 0;
+      color: #999;
       font-size: 14px;
       text-align: center;
+      background: #fff;
+      padding: 10px 0;
+      position: absolute;
+      bottom: 0;
+      width: 100vw;
+      left: 0;
+      z-index: 2;
+      border-top: 1px solid #eee;
+    }
+    @media (max-width: 800px) {
+      #puzzle-grid {
+        width: 96vw;
+        height: 96vw;
+        max-width: 100vw;
+        max-height: 100vw;
+        gap: 4vw;
+        border-radius: 3vw;
+      }
+      #preview-modal img {
+        width: 85vw; height: 85vw;
+        max-width: 360px; max-height: 360px;
+      }
+    }
+    @media (max-width: 600px) {
+      #header, #controls {
+        padding: 14px 7vw 0 7vw;
+      }
+      #controls {
+        padding: 10px 7vw 14px 7vw;
+      }
     }
     @media (max-width: 400px) {
-      #puzzle-grid { width: 96vw; height: 96vw; max-width: 99vw; max-height: 99vw; }
-      #preview-modal img { width: 85vw; height: 85vw; max-width:280px; max-height:280px; }
+      #puzzle-grid, #preview-modal img {
+        width: 99vw !important;
+        height: 99vw !important;
+        max-width: 99vw !important;
+        max-height: 99vw !important;
+      }
     }
   </style>
 </head>
@@ -184,6 +259,10 @@
       <span id="stats">Moves: 0 | Time: 0s</span>
       <button id="reset-btn" aria-label="Reset puzzle">Reset</button>
     </div>
+    <div id="footer">
+      Tractor Puzzle Game &mdash; HTML5 Demo<br>
+      Replace images in <code>tractorImages</code> for real tractors!
+    </div>
   </div>
   <div id="preview-modal">
     <img id="preview-img" alt="Preview of tractor image for this level">
@@ -194,10 +273,6 @@
     <div id="win-details"></div>
     <button id="next-level-btn">Next Level</button>
     <button id="replay-btn">Replay</button>
-  </div>
-  <div id="footer">
-    Tractor Puzzle Game &mdash; HTML5 Demo<br>
-    Replace images in <code>tractorImages</code> for real tractors!
   </div>
   <script>
     // --- TRACTOR IMAGE SAMPLES (replace with real photos for production) ---
@@ -215,14 +290,14 @@
     ];
 
     // --- GLOBAL STATE ---
-    const gridSize = 4; // 4x4
+    const gridSize = 2; // 2x2
+    const partCount = gridSize * gridSize;
     let currentLevel = 0;
     let board = [];
     let moveCount = 0;
     let startTime = null;
     let timerInterval = null;
     let gameActive = false;
-    let emptyIdx = 15;
     let solvedOrder = [];
     let shuffledOrder = [];
     let touchState = null; // {startX, startY, idx}
@@ -257,29 +332,28 @@
     // --- PUZZLE LOGIC ---
     function makeBoard(order) {
       puzzleGrid.innerHTML = '';
-      for (let i=0; i<16; ++i) {
+      const imgUrl = tractorImages[currentLevel];
+      const n = gridSize;
+      for (let i = 0; i < partCount; ++i) {
         const tile = document.createElement('div');
         tile.className = 'tile';
         tile.setAttribute('data-idx', i);
-        if (order[i] === 15) tile.classList.add('empty');
-        else {
-          const img = document.createElement('img');
-          img.draggable = false;
-          img.src = tractorImages[currentLevel];
-          img.alt = `Tractor Level ${currentLevel+1}`;
-          // Use CSS object-position to show correct part
-          img.style.objectPosition = `${-100*(order[i]%4)}px ${-100*Math.floor(order[i]/4)}px`;
-          img.style.width = "400%";
-          img.style.height = "400%";
-          img.style.transform = `translate(${-25*(order[i]%4)}%, ${-25*Math.floor(order[i]/4)}%)`;
-          tile.appendChild(img);
-        }
+
+        const piece = order[i];
+        const row = Math.floor(piece / n);
+        const col = piece % n;
+        const x = (col / (n - 1)) * 100;
+        const y = (row / (n - 1)) * 100;
+        tile.style.backgroundImage = `url('${imgUrl}')`;
+        tile.style.backgroundSize = `${n * 100}% ${n * 100}%`;
+        tile.style.backgroundPosition = `${x}% ${y}%`;
+        tile.style.backgroundRepeat = 'no-repeat';
+        tile.style.backgroundColor = '#fff';
         puzzleGrid.appendChild(tile);
       }
     }
 
     function getShuffledOrder() {
-      // Make sure puzzle is always solvable and not already solved
       let arr;
       do {
         arr = solvedOrder.slice();
@@ -293,17 +367,14 @@
     }
 
     function isSolvable(arr) {
-      // Based on inversion count for 4x4 sliding puzzles
+      // For 2x2, only even permutations are solvable
       let inv = 0;
-      for (let i = 0; i < 16; i++) {
-        if (arr[i] === 15) continue;
-        for (let j = i + 1; j < 16; j++) {
-          if (arr[j] === 15) continue;
+      for (let i = 0; i < partCount; i++) {
+        for (let j = i + 1; j < partCount; j++) {
           if (arr[i] > arr[j]) inv++;
         }
       }
-      const emptyRow = Math.floor(arr.indexOf(15) / 4);
-      return (inv + emptyRow) % 2 === 0;
+      return inv % 2 === 0;
     }
 
     function isSolved(arr) {
@@ -313,9 +384,8 @@
     function startLevel(level) {
       currentLevel = level;
       levelSelect.value = level;
-      solvedOrder = Array.from({length:16}, (_,i)=>i);
+      solvedOrder = Array.from({length:partCount}, (_,i)=>i);
       shuffledOrder = getShuffledOrder();
-      emptyIdx = shuffledOrder.indexOf(15);
       makeBoard(shuffledOrder);
       moveCount = 0;
       updateStats();
@@ -332,29 +402,37 @@
     }
 
     // --- SWIPE CONTROL ---
-    function idxToRC(idx) { return [Math.floor(idx/4), idx%4]; }
-    function rcToIdx(r,c) { return r*4+c; }
+    function idxToRC(idx) { return [Math.floor(idx/gridSize), idx%gridSize]; }
+    function rcToIdx(r,c) { return r*gridSize+c; }
 
     function moveTile(idx) {
       if (!gameActive) return;
-      const [er, ec] = idxToRC(emptyIdx);
       const [tr, tc] = idxToRC(idx);
-      // Only adjacent
-      if ((Math.abs(er-tr)+Math.abs(ec-tc))!==1) return false;
-      [shuffledOrder[emptyIdx], shuffledOrder[idx]] = [shuffledOrder[idx], shuffledOrder[emptyIdx]];
-      emptyIdx = idx;
-      makeBoard(shuffledOrder);
-      moveCount++;
-      updateStats();
-      if (isSolved(shuffledOrder)) winGame();
-      return true;
+
+      // Find which tile to swap with (must be an adjacent tile)
+      // Only allow swaps with adjacent tiles
+      const candidates = [
+        [tr-1, tc], [tr+1, tc], [tr, tc-1], [tr, tc+1]
+      ].filter(([r,c]) => r >= 0 && r < gridSize && c >= 0 && c < gridSize);
+      for (const [r,c] of candidates) {
+        const swapIdx = rcToIdx(r,c);
+        if (swapIdx !== idx) {
+          // swap tiles
+          [shuffledOrder[idx], shuffledOrder[swapIdx]] = [shuffledOrder[swapIdx], shuffledOrder[idx]];
+          makeBoard(shuffledOrder);
+          moveCount++;
+          updateStats();
+          if (isSolved(shuffledOrder)) winGame();
+          return;
+        }
+      }
     }
 
     function onTouchStart(e) {
       if (!gameActive) return;
       let touch = e.touches ? e.touches[0] : e;
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (!el || !el.classList.contains('tile') || el.classList.contains('empty')) return;
+      if (!el || !el.classList.contains('tile')) return;
       touchState = {startX: touch.clientX, startY: touch.clientY, idx: parseInt(el.getAttribute('data-idx'))};
       e.preventDefault();
     }
@@ -363,17 +441,20 @@
       let touch = e.touches ? e.touches[0] : e;
       const dx = touch.clientX - touchState.startX, dy = touch.clientY - touchState.startY;
       if (Math.abs(dx) < 32 && Math.abs(dy) < 32) return;
-      // Determine direction
       let dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right':'left') : (dy > 0 ? 'down':'up');
       const idx = touchState.idx;
       const [r,c] = idxToRC(idx);
       let ni = -1;
-      if (dir==='up' && r>0 && rcToIdx(r-1,c)===emptyIdx) ni = rcToIdx(r-1,c);
-      if (dir==='down' && r<3 && rcToIdx(r+1,c)===emptyIdx) ni = rcToIdx(r+1,c);
-      if (dir==='left' && c>0 && rcToIdx(r,c-1)===emptyIdx) ni = rcToIdx(r,c-1);
-      if (dir==='right' && c<3 && rcToIdx(r,c+1)===emptyIdx) ni = rcToIdx(r,c+1);
+      if (dir==='up' && r>0) ni = rcToIdx(r-1,c);
+      if (dir==='down' && r<gridSize-1) ni = rcToIdx(r+1,c);
+      if (dir==='left' && c>0) ni = rcToIdx(r,c-1);
+      if (dir==='right' && c<gridSize-1) ni = rcToIdx(r,c+1);
       if (ni!==-1) {
-        moveTile(idx);
+        [shuffledOrder[idx], shuffledOrder[ni]] = [shuffledOrder[ni], shuffledOrder[idx]];
+        makeBoard(shuffledOrder);
+        moveCount++;
+        updateStats();
+        if (isSolved(shuffledOrder)) winGame();
         touchState = null;
       }
       e.preventDefault();
@@ -384,7 +465,7 @@
     function onClickTile(e) {
       if (!gameActive) return;
       const el = e.target.closest('.tile');
-      if (!el || el.classList.contains('empty')) return;
+      if (!el) return;
       moveTile(parseInt(el.getAttribute('data-idx')));
     }
 
