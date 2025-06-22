@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tractor Sliding Puzzle Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      background: #222;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh;
+    }
+    #game-container {
+      margin: 30px auto 10px auto;
+      background: #333;
+      border-radius: 16px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+      padding: 18px 12px 24px 12px;
+      max-width: 98vw;
+      user-select: none;
+      touch-action: none;
+    }
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+    #level-select {
+      font-size: 16px;
+      border-radius: 4px;
+      border: none;
+      padding: 2px 10px;
+      margin-left: 8px;
+      background: #555;
+      color: #fff;
+    }
+    #puzzle-grid {
+      width: 320px;
+      height: 320px;
+      background: #111;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 2px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      touch-action: none;
+    }
+    .tile {
+      background: #eee;
+      color: #222;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0;
+      border-radius: 5px;
+      transition: transform 0.16s cubic-bezier(.5,1.4,.8,1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.11);
+      overflow: hidden;
+      cursor: pointer;
+      touch-action: none;
+    }
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      border-radius: 5px;
+      user-drag: none;
+      user-select: none;
+    }
+    .tile.empty {
+      background: #111;
+      cursor: default;
+      transition: background 0.2s;
+    }
+    #controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 7px;
+    }
+    #stats {
+      font-size: 16px;
+    }
+    #preview-btn, #reset-btn {
+      background: #888;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 12px;
+      font-size: 15px;
+      margin: 0 2px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #preview-btn:hover, #reset-btn:hover {
+      background: #aaa;
+    }
+    #preview-modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #111;
+      border-radius: 16px;
+      padding: 22px 18px 18px 18px;
+      z-index: 9999;
+      box-shadow: 0 8px 48px #000b;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #preview-modal img {
+      width: 256px; height: 256px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    #close-preview {
+      background: #888;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 12px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    #win-modal {
+      position: fixed;
+      z-index: 9999;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a3;
+      color: #fff;
+      border-radius: 16px;
+      padding: 32px 18px 20px 18px;
+      box-shadow: 0 8px 48px #000b;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    #win-modal button {
+      background: #fff;
+      color: #176c1f;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 18px;
+      font-size: 18px;
+      cursor: pointer;
+      margin: 8px 7px 0 7px;
+      font-weight: bold;
+    }
+    #footer {
+      margin-top: 18px;
+      color: #888;
+      font-size: 14px;
+      text-align: center;
+    }
+    @media (max-width: 400px) {
+      #puzzle-grid { width: 96vw; height: 96vw; max-width: 99vw; max-height: 99vw; }
+      #preview-modal img { width: 85vw; height: 85vw; max-width:280px; max-height:280px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="header">
+      <span>
+        Level:
+        <select id="level-select"></select>
+      </span>
+      <button id="preview-btn" aria-label="Show image preview">Preview</button>
+    </div>
+    <div id="puzzle-grid"></div>
+    <div id="controls">
+      <span id="stats">Moves: 0 | Time: 0s</span>
+      <button id="reset-btn" aria-label="Reset puzzle">Reset</button>
+    </div>
+  </div>
+  <div id="preview-modal">
+    <img id="preview-img" alt="Preview of tractor image for this level">
+    <button id="close-preview">Close</button>
+  </div>
+  <div id="win-modal">
+    <h2>🎉 Puzzle Completed!</h2>
+    <div id="win-details"></div>
+    <button id="next-level-btn">Next Level</button>
+    <button id="replay-btn">Replay</button>
+  </div>
+  <div id="footer">
+    Tractor Puzzle Game &mdash; HTML5 Demo<br>
+    Replace images in <code>tractorImages</code> for real tractors!
+  </div>
+  <script>
+    // --- TRACTOR IMAGE SAMPLES (replace with real photos for production) ---
+    const tractorImages = [
+        "https://inste.github.io/1.jpg",
+        "https://inste.github.io/2.jpg",
+        "https://inste.github.io/3.jpg",
+        "https://inste.github.io/4.jpg",
+        "https://inste.github.io/5.jpg",
+        "https://inste.github.io/1.jpg",
+        "https://inste.github.io/2.jpg",
+        "https://inste.github.io/3.jpg",
+        "https://inste.github.io/4.jpg",
+        "https://inste.github.io/5.jpg"
+    ];
+
+    // --- GLOBAL STATE ---
+    const gridSize = 4; // 4x4
+    let currentLevel = 0;
+    let board = [];
+    let moveCount = 0;
+    let startTime = null;
+    let timerInterval = null;
+    let gameActive = false;
+    let emptyIdx = 15;
+    let solvedOrder = [];
+    let shuffledOrder = [];
+    let touchState = null; // {startX, startY, idx}
+    let recordTimes = new Array(10).fill(null);
+
+    // --- DOM ---
+    const puzzleGrid = document.getElementById('puzzle-grid');
+    const stats = document.getElementById('stats');
+    const resetBtn = document.getElementById('reset-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const previewModal = document.getElementById('preview-modal');
+    const previewImg = document.getElementById('preview-img');
+    const closePreview = document.getElementById('close-preview');
+    const levelSelect = document.getElementById('level-select');
+    const winModal = document.getElementById('win-modal');
+    const winDetails = document.getElementById('win-details');
+    const nextLevelBtn = document.getElementById('next-level-btn');
+    const replayBtn = document.getElementById('replay-btn');
+
+    // --- SETUP LEVEL SELECT ---
+    tractorImages.forEach((img, i) => {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = `Level ${i+1}`;
+      levelSelect.appendChild(opt);
+    });
+
+    levelSelect.addEventListener('change', () => {
+      currentLevel = parseInt(levelSelect.value,10);
+      startLevel(currentLevel);
+    });
+
+    // --- PUZZLE LOGIC ---
+    function makeBoard(order) {
+      puzzleGrid.innerHTML = '';
+      for (let i=0; i<16; ++i) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.setAttribute('data-idx', i);
+        if (order[i] === 15) tile.classList.add('empty');
+        else {
+          const img = document.createElement('img');
+          img.draggable = false;
+          img.src = tractorImages[currentLevel];
+          img.alt = `Tractor Level ${currentLevel+1}`;
+          // Use CSS object-position to show correct part
+          img.style.objectPosition = `${-100*(order[i]%4)}px ${-100*Math.floor(order[i]/4)}px`;
+          img.style.width = "400%";
+          img.style.height = "400%";
+          img.style.transform = `translate(${-25*(order[i]%4)}%, ${-25*Math.floor(order[i]/4)}%)`;
+          tile.appendChild(img);
+        }
+        puzzleGrid.appendChild(tile);
+      }
+    }
+
+    function getShuffledOrder() {
+      // Make sure puzzle is always solvable and not already solved
+      let arr;
+      do {
+        arr = solvedOrder.slice();
+        // Fisher-Yates shuffle
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      } while (!isSolvable(arr) || isSolved(arr));
+      return arr;
+    }
+
+    function isSolvable(arr) {
+      // Based on inversion count for 4x4 sliding puzzles
+      let inv = 0;
+      for (let i = 0; i < 16; i++) {
+        if (arr[i] === 15) continue;
+        for (let j = i + 1; j < 16; j++) {
+          if (arr[j] === 15) continue;
+          if (arr[i] > arr[j]) inv++;
+        }
+      }
+      const emptyRow = Math.floor(arr.indexOf(15) / 4);
+      return (inv + emptyRow) % 2 === 0;
+    }
+
+    function isSolved(arr) {
+      return arr.every((val,idx)=>val===idx);
+    }
+
+    function startLevel(level) {
+      currentLevel = level;
+      levelSelect.value = level;
+      solvedOrder = Array.from({length:16}, (_,i)=>i);
+      shuffledOrder = getShuffledOrder();
+      emptyIdx = shuffledOrder.indexOf(15);
+      makeBoard(shuffledOrder);
+      moveCount = 0;
+      updateStats();
+      if (timerInterval) clearInterval(timerInterval);
+      startTime = Date.now();
+      timerInterval = setInterval(updateStats, 300);
+      gameActive = true;
+      puzzleGrid.classList.remove('win');
+    }
+
+    function updateStats() {
+      const t = gameActive ? Math.floor((Date.now()-startTime)/1000) : Math.floor((recordTimes[currentLevel]||0)/1000);
+      stats.textContent = `Moves: ${moveCount} | Time: ${t}s`;
+    }
+
+    // --- SWIPE CONTROL ---
+    function idxToRC(idx) { return [Math.floor(idx/4), idx%4]; }
+    function rcToIdx(r,c) { return r*4+c; }
+
+    function moveTile(idx) {
+      if (!gameActive) return;
+      const [er, ec] = idxToRC(emptyIdx);
+      const [tr, tc] = idxToRC(idx);
+      // Only adjacent
+      if ((Math.abs(er-tr)+Math.abs(ec-tc))!==1) return false;
+      [shuffledOrder[emptyIdx], shuffledOrder[idx]] = [shuffledOrder[idx], shuffledOrder[emptyIdx]];
+      emptyIdx = idx;
+      makeBoard(shuffledOrder);
+      moveCount++;
+      updateStats();
+      if (isSolved(shuffledOrder)) winGame();
+      return true;
+    }
+
+    function onTouchStart(e) {
+      if (!gameActive) return;
+      let touch = e.touches ? e.touches[0] : e;
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!el || !el.classList.contains('tile') || el.classList.contains('empty')) return;
+      touchState = {startX: touch.clientX, startY: touch.clientY, idx: parseInt(el.getAttribute('data-idx'))};
+      e.preventDefault();
+    }
+    function onTouchMove(e) {
+      if (!touchState) return;
+      let touch = e.touches ? e.touches[0] : e;
+      const dx = touch.clientX - touchState.startX, dy = touch.clientY - touchState.startY;
+      if (Math.abs(dx) < 32 && Math.abs(dy) < 32) return;
+      // Determine direction
+      let dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right':'left') : (dy > 0 ? 'down':'up');
+      const idx = touchState.idx;
+      const [r,c] = idxToRC(idx);
+      let ni = -1;
+      if (dir==='up' && r>0 && rcToIdx(r-1,c)===emptyIdx) ni = rcToIdx(r-1,c);
+      if (dir==='down' && r<3 && rcToIdx(r+1,c)===emptyIdx) ni = rcToIdx(r+1,c);
+      if (dir==='left' && c>0 && rcToIdx(r,c-1)===emptyIdx) ni = rcToIdx(r,c-1);
+      if (dir==='right' && c<3 && rcToIdx(r,c+1)===emptyIdx) ni = rcToIdx(r,c+1);
+      if (ni!==-1) {
+        moveTile(idx);
+        touchState = null;
+      }
+      e.preventDefault();
+    }
+    function onTouchEnd(e) {
+      touchState = null;
+    }
+    function onClickTile(e) {
+      if (!gameActive) return;
+      const el = e.target.closest('.tile');
+      if (!el || el.classList.contains('empty')) return;
+      moveTile(parseInt(el.getAttribute('data-idx')));
+    }
+
+    // --- EVENT BINDINGS ---
+    puzzleGrid.addEventListener('touchstart', onTouchStart, {passive:false});
+    puzzleGrid.addEventListener('touchmove', onTouchMove, {passive:false});
+    puzzleGrid.addEventListener('touchend', onTouchEnd, {passive:false});
+    puzzleGrid.addEventListener('mousedown', onTouchStart);
+    puzzleGrid.addEventListener('mousemove', onTouchMove);
+    puzzleGrid.addEventListener('mouseup', onTouchEnd);
+    puzzleGrid.addEventListener('click', onClickTile);
+
+    resetBtn.addEventListener('click', ()=>startLevel(currentLevel));
+
+    previewBtn.addEventListener('click', ()=>{
+      previewImg.src = tractorImages[currentLevel];
+      previewModal.style.display = 'flex';
+    });
+    closePreview.addEventListener('click', ()=>previewModal.style.display='none');
+
+    function winGame() {
+      gameActive = false;
+      clearInterval(timerInterval);
+      recordTimes[currentLevel] = Date.now()-startTime;
+      winDetails.innerHTML = `<b>Level ${currentLevel+1}</b><br>Moves: ${moveCount}<br>Time: ${Math.floor(recordTimes[currentLevel]/1000)}s`;
+      winModal.style.display = 'flex';
+    }
+    nextLevelBtn.addEventListener('click', ()=>{
+      winModal.style.display='none';
+      if (currentLevel<tractorImages.length-1) startLevel(++currentLevel);
+      else startLevel(0);
+    });
+    replayBtn.addEventListener('click', ()=>{
+      winModal.style.display='none';
+      startLevel(currentLevel);
+    });
+
+    // --- INIT ---
+    startLevel(0);
+
+    // --- PROGRESS SAVE/LOAD (optional, localStorage) ---
+    // You can uncomment below for persistent progress
+    /*
+    function saveProgress() {
+      localStorage.setItem('tractorPuzzle-progress', JSON.stringify({
+        level: currentLevel,
+        moveCount,
+        startTime,
+        recordTimes
+      }));
+    }
+    function loadProgress() {
+      const data = localStorage.getItem('tractorPuzzle-progress');
+      if (data) {
+        const {level, recordTimes:rt} = JSON.parse(data);
+        currentLevel = level || 0;
+        recordTimes = rt || recordTimes;
+      }
+    }
+    window.addEventListener('beforeunload', saveProgress);
+    loadProgress();
+    */
+  </script>
+</body>
+</html>
